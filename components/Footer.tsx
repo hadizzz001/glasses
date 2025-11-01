@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaChevronDown, FaEnvelope, FaWhatsapp, FaFacebookF, FaTiktok, FaInstagram } from 'react-icons/fa';
+import { FaChevronDown, FaEnvelope, FaWhatsapp, FaFacebookF, FaTiktok, FaInstagram, FaFacebook } from 'react-icons/fa';
 
 const Footer = () => {
   const [showPolicies, setShowPolicies] = useState(false);
@@ -75,9 +75,10 @@ const Footer = () => {
 
         {/* Social Icons Above Footer Text */}
         <div className="max-w-7xl mx-auto flex justify-center gap-5 text-lg mt-10">
-          <a href="mailto:example@example.com"><FaEnvelope className="text-[#333] cursor-pointer" /></a>
+          {/* <a href="mailto:example@example.com"><FaEnvelope className="text-[#333] cursor-pointer" /></a> */}
           <a href="https://wa.me/96181047532"><FaWhatsapp className="text-[#333] cursor-pointer" /></a>
           <a href="https://www.instagram.com/poptical_sunglasses/"><FaInstagram className="text-[#333] cursor-pointer" /></a>
+          <a href="https://www.facebook.com/profile.php?id=100095316781172"><FaFacebook className="text-[#333] cursor-pointer" /></a>
         </div>
 
         {/* Bottom */}
@@ -162,9 +163,11 @@ const Footer = () => {
 
         {/* Social Icons Above Footer Text */}
         <div className="flex flex-wrap justify-center gap-5 text-lg mt-10">
-          <a href="mailto:example@example.com"><FaEnvelope className="text-[#333] cursor-pointer" /></a>
+          {/* <a href="mailto:example@example.com"><FaEnvelope className="text-[#333] cursor-pointer" /></a> */}
           <a href="https://wa.me/96181047532"><FaWhatsapp className="text-[#333] cursor-pointer" /></a>
           <a href="https://www.instagram.com/poptical_sunglasses/"><FaInstagram className="text-[#333] cursor-pointer" /></a>
+          <a href="https://www.facebook.com/profile.php?id=100095316781172"><FaFacebook className="text-[#333] cursor-pointer" /></a>
+
         </div>
 
         {/* Bottom */}
