@@ -11,6 +11,7 @@ import Box from './Box';
 import Carousel from './Carousel';
 import Carousel1 from './Carousel1';
 import BrandCarousel from './BrandCarousel';
+import Under from './Under';
 
 
 
@@ -125,6 +126,7 @@ const Body = () => {
         <Box />
 
         <Carousel />
+        <Under />
 
         <Catslider />
         <ProductArrival />

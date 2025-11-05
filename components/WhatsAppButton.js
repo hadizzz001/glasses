@@ -156,11 +156,20 @@ const createWhatsAppURL = (inputs, items, total, delivery, code, subtotal) => {
       Item ${index + 1}:
       - Name: ${item.title} 
       - Quantity: ${item.quantity}
-      - Price: $${(() => {
-      const colorObj = item.color?.find(c => c.color === item.selectedColor);
-      const sizeObj = colorObj?.sizes?.find(s => s.size === item.selectedSize);
-      return sizeObj?.price ?? item.discount;
-    })()}
+- Price: $${(() => { 
+  const colorObj = item.color?.find(c => c.title === item.selectedColor);
+
+  const sizeObj = colorObj?.sizes?.find(s => s.size === item.selectedSize);
+
+  // For collection type → show the size price
+  if (item.type === "collection") {
+    return sizeObj?.price ?? "0.00";
+  }
+
+  // For single type → show normal price or discount if exists
+  return item.discount ?? item.price;
+})()}
+
 
       - Color: ${item.selectedColor}
       - Size: ${item.selectedSize}

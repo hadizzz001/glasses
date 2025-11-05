@@ -47,26 +47,56 @@ const CarCard = ({ temp }: CarCardProps) => {
                     )}
                 </div>
 
-                {/* Text under image */}
-                <div className="flex flex-col items-start mt-3 w-full">
-                    <h2 className="myGrayTP uppercase py-1">{title}</h2>
-                    <div className="price-container inline-flex flex-wrap gap-x-2 items-baseline text-white">
-                        {discount && discount > 0 ? (
-                            <>
-                                <span className="py-1 myRed1">
-                                    ${parseFloat(discount).toFixed(2)}
-                                </span>
-                                <span className="font-light text-[13px] py-1 line-through text-gray-400">
-                                    ${parseFloat(price).toFixed(2)}
-                                </span>
-                            </>
-                        ) : (
-                            <span className="py-1 myRed1">
-                                ${parseFloat(price).toFixed(2)}
-                            </span>
-                        )}
-                    </div>
-                </div>
+{/* Text under image */}
+<div className="flex flex-col items-start mt-3 w-full">
+  <h2 className="myGrayTP uppercase py-1">{title}</h2>
+
+  {/* Price display */}
+  <div className="price-container inline-flex flex-wrap gap-x-2 items-baseline text-white">
+
+    {type === "collection" ? (
+      // ✅ For collection, calculate min/max price from sizes
+      (() => {
+        const allPrices = color
+          ?.flatMap(c => c.sizes.map(s => s.price))  // extract all size prices
+          .filter(p => p > 0);                        // remove 0 or invalid prices
+
+        if (allPrices?.length > 0) {
+          const min = Math.min(...allPrices);
+          const max = Math.max(...allPrices);
+
+          return (
+            <span className="py-1 myRed1">
+              ${min.toFixed(2)} - ${max.toFixed(2)}
+            </span>
+          );
+        } else {
+          return (
+            <span className="py-1 myRed1">No Price</span>
+          );
+        }
+      })()
+    ) : (
+      // ✅ Normal product (single type)
+      discount && discount > 0 ? (
+        <>
+          <span className="py-1 myRed1">
+            ${parseFloat(discount).toFixed(2)}
+          </span>
+          <span className="font-light text-[13px] py-1 line-through text-gray-400">
+            ${parseFloat(price).toFixed(2)}
+          </span>
+        </>
+      ) : (
+        <span className="py-1 myRed1">
+          ${parseFloat(price).toFixed(2)}
+        </span>
+      )
+    )}
+
+  </div>
+</div>
+
             </div>
         </a>
     );

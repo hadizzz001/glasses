@@ -4,6 +4,10 @@ const QuantitySelector = ({ initialQty = 1, productId, onChange, type, selectedC
   const [qty, setQty] = useState(initialQty);
   const [maxStock, setMaxStock] = useState(null); // Store max stock
 
+console.log("initialQty " , initialQty);
+console.log("selectedColor " ,selectedColor );
+console.log("selectedSize " , selectedSize);
+console.log("type " , type); 
 
 
   useEffect(() => {

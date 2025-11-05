@@ -1,9 +1,9 @@
-import clientPromise from '../../../lib/mongodb';
+import clientPromise from '../../../lib/mongodb'; 
 import { NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 
 export async function PATCH(request) {
-  const { id, color, size, qty } = await request.json(); // Expecting id, color, size, and qty in body
+  const { id, color, size, qty } = await request.json(); // Expecting id, color title, size, and qty
 
   console.log("id, color, size, qty: ", id, color, size, qty);
 
@@ -19,7 +19,7 @@ export async function PATCH(request) {
 
     const objectId = new ObjectId(id);
 
-    // Check current stock first
+    // Find product and colors
     const product = await collection.findOne(
       { _id: objectId },
       { projection: { color: 1 } }
@@ -29,11 +29,13 @@ export async function PATCH(request) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    const colorEntry = product.color.find(c => c.color === color);
+    // Find the color by title
+    const colorEntry = product.color.find(c => c.title === color);
     if (!colorEntry) {
       return NextResponse.json({ error: "Color not found" }, { status: 404 });
     }
 
+    // Find size inside the color
     const sizeEntry = colorEntry.sizes.find(s => s.size === size);
     if (!sizeEntry) {
       return NextResponse.json({ error: "Size not found for this color" }, { status: 404 });
@@ -43,7 +45,7 @@ export async function PATCH(request) {
       return NextResponse.json({ error: "Insufficient stock for this size" }, { status: 400 });
     }
 
-    // Decrease the quantity using arrayFilters
+    // Update the quantity using arrayFilters
     const result = await collection.updateOne(
       { _id: objectId },
       {
@@ -51,7 +53,7 @@ export async function PATCH(request) {
       },
       {
         arrayFilters: [
-          { "c.color": color },
+          { "c.title": color },
           { "s.size": size }
         ]
       }
@@ -70,9 +72,8 @@ export async function PATCH(request) {
 }
 
 
-
 export async function GET(request, { params }) {
-  // Expecting params.id like "productId,color,size"
+  // Expecting params.id like "productId,colorTitle,size"
   const [id, color, size] = params.id.split(','); 
 
   try {
@@ -90,8 +91,8 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    // Find the color entry
-    const colorEntry = product.color.find(c => c.color === color);
+    // Find the color by title
+    const colorEntry = product.color.find(c => c.title === color);
     if (!colorEntry) {
       return NextResponse.json({ error: "Color not available" }, { status: 404 });
     }

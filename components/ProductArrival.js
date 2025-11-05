@@ -35,11 +35,11 @@ const YourComponent = () => {
 
           {allTemps && allTemps.length > 0 ? (
             <>
- 
-                  <h1 className="uppercase text-center  my-6  px-4 myGrayCat1 mt-20 mb-10">
-      BEST SELLERS
 
-    </h1>
+              <h1 className="uppercase text-center  my-6  px-4 myGrayCat1 mt-20 mb-10">
+                BEST SELLERS
+
+              </h1>
 
               <section className='mb-5' style={{ maxWidth: "100%" }}>
                 <Swiper
@@ -64,7 +64,7 @@ const YourComponent = () => {
               </section>
 
               <div className="text-center">
-                <button 
+                <button
                   className='myinsidebtn'
                   onClick={() => router.push("/shop")}
                 >

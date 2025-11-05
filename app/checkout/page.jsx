@@ -1177,8 +1177,11 @@ const generatePDF = async () => {
                                                                 <span className="woocommerce-Price-currencySymbol">
                                                                   $
                                                                 </span>
-                                                                {obj.type === 'collection' && obj.selectedSize ? obj.color.find(c => c.color === obj.selectedColor)?.sizes.find(s => s.size === obj.selectedSize)?.price * (localQuantities[obj._id]) : obj.discount * (localQuantities[obj._id] || 1)}
- 
+                                                               {obj.type === 'collection' && obj.selectedSize && obj.selectedColor
+  ? (obj.color.find(c => c.title === obj.selectedColor)?.sizes.find(s => s.size === obj.selectedSize)?.price || 0) * (localQuantities[obj._id] || 1)
+  : ((obj.discount && obj.discount !== "0") ? parseFloat(obj.discount) : parseFloat(obj.price)) * (localQuantities[obj._id] || 1)
+}
+
                                                               </bdi>
                                                             </span>{" "}
                                                           </div>
@@ -1246,27 +1249,7 @@ const generatePDF = async () => {
                                                   </button>
                                                 </div>
 
-                                                <div>
-                                                  <label className="custom-checkbox-container myGray clickText  ">
-                                                    <span className="ml-[25px]"></span>I am business or would like a b2b offer
-                                                    <input type="checkbox" onChange={handleCheckboxChange} />
-                                                    <span className="custom-checkmark"></span>
-                                                  </label>
-
-                                                  {showLink && (
-                                                    <a
-                                                      href="#"
-                                                      onClick={(e) => {
-                                                        e.preventDefault();
-                                                        generatePDF();
-                                                      }}
-                                                      style={{ display: 'block', marginTop: '1em', color: 'blue' }}
-                                                      className="clickText1"
-                                                    >
-                                                      Generate Product PDF
-                                                    </a>
-                                                  )}
-                                                </div>
+                    
 
 
 

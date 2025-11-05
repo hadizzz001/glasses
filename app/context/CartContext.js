@@ -1,4 +1,4 @@
-"use client";
+"use client"; 
 
 import React, { createContext, useContext, useEffect, useReducer, useState } from "react";
 
@@ -22,14 +22,10 @@ const cartReducer = (state, action) => {
 const CartProvider = ({ children }) => {
   const [cart, dispatch] = useReducer(cartReducer, [], (initial) => {
     if (typeof window !== "undefined") {
-      try {
-        const storedCart = localStorage.getItem("cart");
-        return storedCart ? JSON.parse(storedCart) : initial;
-      } catch (error) {
-        console.error("Error parsing cart from localStorage:", error);
-        return initial;
-      }
+      const storedCart = localStorage.getItem("cart");
+      return storedCart ? JSON.parse(storedCart) : initial;
     }
+    return initial;
   });
 
   const [quantities, setQuantities] = useState(() => {
@@ -37,6 +33,7 @@ const CartProvider = ({ children }) => {
       const storedQuantities = localStorage.getItem("quantities");
       return storedQuantities ? JSON.parse(storedQuantities) : {};
     }
+    return {};
   });
 
   const [selectedColors, setSelectedColors] = useState(() => {
@@ -44,6 +41,7 @@ const CartProvider = ({ children }) => {
       const storedColors = localStorage.getItem("selectedColors");
       return storedColors ? JSON.parse(storedColors) : {};
     }
+    return {};
   });
 
   const [selectedSizes, setSelectedSizes] = useState(() => {
@@ -51,140 +49,79 @@ const CartProvider = ({ children }) => {
       const storedSizes = localStorage.getItem("selectedSizes");
       return storedSizes ? JSON.parse(storedSizes) : {};
     }
+    return {};
   });
 
   const [subtotal, setSubtotal] = useState(0);
 
   useEffect(() => {
-    if (typeof window !== "undefined")
-      localStorage.setItem("cart", JSON.stringify(cart));
+    if (typeof window !== "undefined") localStorage.setItem("cart", JSON.stringify(cart));
   }, [cart]);
 
   useEffect(() => {
-    if (typeof window !== "undefined")
-      localStorage.setItem("quantities", JSON.stringify(quantities));
+    if (typeof window !== "undefined") localStorage.setItem("quantities", JSON.stringify(quantities));
   }, [quantities]);
 
   useEffect(() => {
-    if (typeof window !== "undefined")
-      localStorage.setItem("selectedColors", JSON.stringify(selectedColors));
+    if (typeof window !== "undefined") localStorage.setItem("selectedColors", JSON.stringify(selectedColors));
   }, [selectedColors]);
 
   useEffect(() => {
-    if (typeof window !== "undefined")
-      localStorage.setItem("selectedSizes", JSON.stringify(selectedSizes));
+    if (typeof window !== "undefined") localStorage.setItem("selectedSizes", JSON.stringify(selectedSizes));
   }, [selectedSizes]);
 
-useEffect(() => {
-  const newSubtotal = cart.reduce((acc, item) => {
-    const quantity = quantities[item._id] || 1;
+  useEffect(() => {
+    const newSubtotal = cart.reduce((acc, item) => {
+      const quantity = quantities[item._id] || 1;
+      let price = Number(item.discount) || Number(item.price) || 0;
 
-    let price = item.discount; // Default fallback
+      if (item.color && item.color.length > 0) {
+        const colorTitle = selectedColors[item._id] || item.color[0].title;
+        const sizeTitle = selectedSizes[item._id] || item.color[0].sizes[0].size;
 
-    if (item.selectedColor && item.selectedSize && Array.isArray(item.color)) {
-      const colorMatch = item.color.find(c => c.color === item.selectedColor);
-      if (colorMatch && Array.isArray(colorMatch.sizes)) {
-        const sizeMatch = colorMatch.sizes.find(s => s.size === item.selectedSize);
-        if (sizeMatch) {
-          price = sizeMatch.price;
+        const colorMatch = item.color.find(c => c.title === colorTitle);
+        if (colorMatch && Array.isArray(colorMatch.sizes)) {
+          const sizeMatch = colorMatch.sizes.find(s => s.size === sizeTitle);
+          if (sizeMatch) price = sizeMatch.price;
         }
       }
-    }
 
-    return acc + price * quantity;
-  }, 0);
+      return acc + price * quantity;
+    }, 0);
 
-  setSubtotal(newSubtotal);
-}, [quantities, cart]);
+    setSubtotal(newSubtotal);
+  }, [quantities, cart, selectedColors, selectedSizes]);
 
+  const addToCart = (item, quantity = 1) => {
+    let selectedColor = item.color?.[0]?.title || "";
+    let selectedSize = item.color?.[0]?.sizes?.[0]?.size || "";
 
-  const addToCart = (
-    item,
-    quantity = 1,
-    selectedColor = "",
-    selectedSize = ""
-  ) => {
-    const existingCartItemIndex = cart.findIndex(
-      (cartItem) => String(cartItem._id) === String(item._id)
-    );
-
-    if (existingCartItemIndex !== -1) {
-      setQuantities((prev) => ({
-        ...prev,
-        [item._id]: quantity,
-      }));
-
-      setSelectedColors((prev) => ({
-        ...prev,
-        [item._id]: selectedColor,
-      }));
-
-      setSelectedSizes((prev) => ({
-        ...prev,
-        [item._id]: selectedSize,
-      }));
-
+    if (cart.find(ci => ci._id === item._id)) {
       dispatch({
         type: "UPDATE_CART",
-        payload: cart.map((cartItem) =>
-          String(cartItem._id) === String(item._id)
-            ? {
-                ...cartItem,
-                quantity,
-                selectedColor,
-                selectedSize,
-              }
-            : cartItem
+        payload: cart.map(ci =>
+          ci._id === item._id
+            ? { ...ci, quantity, selectedColor, selectedSize }
+            : ci
         ),
       });
     } else {
       dispatch({
         type: "ADD_TO_CART",
-        payload: [
-          ...cart,
-          {
-            ...item,
-            quantity,
-            selectedColor,
-            selectedSize,
-          },
-        ],
+        payload: [...cart, { ...item, quantity, selectedColor, selectedSize }],
       });
-
-      setQuantities((prev) => ({
-        ...prev,
-        [item._id]: quantity,
-      }));
-
-      setSelectedColors((prev) => ({
-        ...prev,
-        [item._id]: selectedColor,
-      }));
-
-      setSelectedSizes((prev) => ({
-        ...prev,
-        [item._id]: selectedSize,
-      }));
     }
+
+    setQuantities(prev => ({ ...prev, [item._id]: quantity }));
+    setSelectedColors(prev => ({ ...prev, [item._id]: selectedColor }));
+    setSelectedSizes(prev => ({ ...prev, [item._id]: selectedSize }));
   };
 
   const removeFromCart = (itemId) => {
     dispatch({ type: "REMOVE_FROM_CART", payload: itemId });
-
-    setQuantities((prev) => {
-      const { [itemId]: removedItem, ...newQuantities } = prev;
-      return newQuantities;
-    });
-
-    setSelectedColors((prev) => {
-      const { [itemId]: removedColor, ...newColors } = prev;
-      return newColors;
-    });
-
-    setSelectedSizes((prev) => {
-      const { [itemId]: removedSize, ...newSizes } = prev;
-      return newSizes;
-    });
+    setQuantities(prev => { const { [itemId]: _, ...rest } = prev; return rest; });
+    setSelectedColors(prev => { const { [itemId]: _, ...rest } = prev; return rest; });
+    setSelectedSizes(prev => { const { [itemId]: _, ...rest } = prev; return rest; });
   };
 
   const clearCart = () => {
@@ -214,9 +151,7 @@ useEffect(() => {
 
 const useCart = () => {
   const context = useContext(CartContext);
-  if (!context) {
-    throw new Error("useCart must be used within a CartProvider");
-  }
+  if (!context) throw new Error("useCart must be used within a CartProvider");
   return context;
 };
 

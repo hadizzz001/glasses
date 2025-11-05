@@ -24,7 +24,7 @@ const Page = () => {
   const search = searchParams.get('id');
   const custom = searchParams.get('custom');
   const imgg = searchParams.get('imgg');
-  let imgs, title, price, desc, cat, brand, discount, id, stock, type, color, sub, fact, views, orders   ;
+  let imgs, title, price, desc, cat, brand, discount, id, stock, type,  sub, fact, views, orders   ;
   const { cart, addToCart, quantities } = useCart();
   const { isBooleanValue, setBooleanValue } = useBooleanValue();
   const isInCart = cart?.some((item) => item._id === search);
@@ -38,6 +38,54 @@ const Page = () => {
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
   const hasRun = useRef(false);
   const [zoomedImg, setZoomedImg] = useState(null);
+  const color = allTemp1?.color ?? []; // ✅ assure color is always an array
+ 
+
+
+
+
+// ✅ Auto-select first color and size when data loads
+useEffect(() => {
+  if (!color || color.length === 0) return;
+
+  // First color with available size
+  const firstColor = color.find(c => c.sizes?.some(s => s.qty > 0)) || color[0];
+
+  if (firstColor) {
+    setSelectedColor(firstColor.title); // store hex
+    if (firstColor.sizes && firstColor.sizes.length > 0) {
+      const firstSize = firstColor.sizes.find(s => s.qty > 0);
+      if (firstSize) {
+        setSelectedSize(firstSize.size);
+        setDisplayedPrice(firstSize.price);
+      }
+    } else {
+      setDisplayedPrice(firstColor.price ?? null);
+      setSelectedSize(null);
+    }
+  }
+}, [allTemp1]);
+
+// ✅ Colors with sizes
+const availableColorsWithSizes = color?.filter(c =>
+  c.sizes?.some(size => size.qty > 0)
+);
+
+// ✅ Colors without sizes
+const availableColorsWithoutSizes = color?.filter(
+  c => (!c.sizes || c.sizes.length === 0) && c.qty > 0
+);
+
+// ✅ Detect if collection has sizes
+useEffect(() => {
+  setHasSizes(Array.isArray(color) && color.some(c => c.sizes?.length > 0));
+}, [color]);
+
+
+
+
+
+ 
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,8 +121,7 @@ const Page = () => {
     discount = allTemp1.discount;
     desc = allTemp1.description;
     stock = allTemp1.stock;
-    type = allTemp1.type;
-    color = allTemp1.color;
+    type = allTemp1.type; 
     sub = allTemp1.sub;
     fact = allTemp1.factory;
     views = allTemp1.views;
@@ -181,15 +228,7 @@ const Page = () => {
   const isSingleOutOfStock = isSingle && Number(stock) === 0;
   const isOutOfStock = isCollectionOutOfStock || isSingleOutOfStock || isCollectionOutOfStock1;
 
-  const availableColorsWithSizes = color?.filter(c =>
-    c.sizes?.some(size => size.qty > 0)
-  );
-
-  const availableColorsWithoutSizes = color?.filter(
-    c => (!c.sizes || c.sizes.length === 0) && c.qty > 0 // assuming a top-level qty field
-  );
-
-
+ 
 
 
 
@@ -204,27 +243,34 @@ const Page = () => {
 
 
 
-  useEffect(() => {
-    if (allTemp1 && color && color.length > 0) {
-      // Set the first available color
-      const firstColorObj = availableColorsWithSizes?.[0] || availableColorsWithoutSizes?.[0];
-      if (firstColorObj) {
-        setSelectedColor(firstColorObj.color);
+useEffect(() => {
+  if (!allTemp1 || !color || color.length === 0) return;
 
-        // If this color has sizes, set the first available size
-        if (firstColorObj.sizes && firstColorObj.sizes.length > 0) {
-          const firstSize = firstColorObj.sizes.find(s => s.qty > 0);
-          if (firstSize) {
-            setSelectedSize(firstSize.size);
-            setDisplayedPrice(firstSize.price);
-          }
-        } else {
-          // If no sizes, set the color price directly
-          setDisplayedPrice(firstColorObj.price ?? null);
-        }
+  // ✅ Get first available color (with size if available)
+  const firstColor = color.find((c) =>
+    c.sizes?.some((s) => s.qty > 0)
+  ) || color[0];
+
+  if (firstColor) {
+    setSelectedColor(firstColor.title); // <-- use code (hex)
+    
+    // ✅ Auto-select first available size
+    if (firstColor.sizes && firstColor.sizes.length > 0) {
+      const firstSize = firstColor.sizes.find((s) => s.qty > 0);
+      if (firstSize) {
+        setSelectedSize(firstSize.size);
+        setDisplayedPrice(firstSize.price);
       }
+    } else {
+      // If collection has no sizes, set price from color level (if exists)
+      setDisplayedPrice(firstColor.price ?? null);
     }
-  }, [allTemp1]);
+  }
+}, [allTemp1]);
+
+
+ 
+
 
 
   useEffect(() => {
@@ -408,83 +454,67 @@ const Page = () => {
                     <hr />
 
                     <div className="ProductSelector_IntroBlurb">
-                      {/* --- your color/size logic --- */}
-                      {isCollection && (
-                        <div className="mb-4">
-                          <h2 className="color-label myGray">Choose a Color:</h2>
-                          <div className="color-options">
-                            {availableColorsWithSizes?.map((c, index) => (
-                              <div
-                                key={index}
-                                onClick={() => {
-                                  setSelectedColor(c.color);
-                                  setSelectedSize(null);
-                                  setDisplayedPrice(null);
-                                }}
-                                className={`color-circle ${selectedColor === c.color ? "selected" : ""
-                                  }`}
-                                style={{ backgroundColor: c.color }}
-                                title={`${c.color}`}
-                              />
-                            ))}
-                          </div>
+{isCollection && (
+  <div className="mb-4">
+    <h2 className="color-label myGray">Choose a Color:</h2>
+    <div className="color-options flex flex-wrap">
+      {availableColorsWithSizes?.map((c, index) => (
+<div
+  key={index}
+  onClick={() => {
+    setSelectedColor(c.title);
+    setSelectedSize(null);
+    setDisplayedPrice(null);
+  }}
+  className={`relative flex items-center justify-center cursor-pointer m-2 rounded-full transition-all duration-200 ${
+    selectedColor === c.title ? 'myboo scale-95' : 'border-2 border-gray-300'
+  }`}
+  style={{
+    width: selectedColor === c.title ? '44px' : '48px', // overall button size
+    height: selectedColor === c.title ? '44px' : '48px',
+  }}
+  title={c.title}
+>
+  <div
+    className="rounded-full transition-all duration-200"
+    style={{
+      backgroundColor: c.code,
+      width: selectedColor === c.title ? '28px' : '36px', // smaller inner circle when selected
+      height: selectedColor === c.title ? '28px' : '36px',
+    }}
+  />
+</div>
 
-                          {!selectedColor && (
-                            <p className="error-message">Please select a color.</p>
-                          )}
+      ))}
+    </div>
 
-                          {selectedColor &&
-                            availableColorsWithSizes.some(
-                              (c) => c.color === selectedColor
-                            ) && (
-                              <div className="mb-4">
-                                <h2 className="size-label">Choose a Size:</h2>
-                                <div className="size-options">
-                                  {availableColorsWithSizes
-                                    .find((c) => c.color === selectedColor)
-                                    ?.sizes?.filter((s) => s.qty > 0)
-                                    ?.map((s, idx) => (
-                                      <button
-                                        key={idx}
-                                        onClick={() => {
-                                          setSelectedSize(s.size);
-                                          setDisplayedPrice(s.price);
-                                        }}
-                                        className={`px-3 py-1 m-1 border rounded ${selectedSize === s.size
-                                          ? "bg-blue-500 text-white"
-                                          : "bg-gray-100"
-                                          } myGray`}
-                                      >
-                                        {s.size}
-                                      </button>
-                                    ))}
-                                </div>
-                              </div>
-                            )}
+    {selectedColor && availableColorsWithSizes.find(c => c.title === selectedColor) && (
+      <div className="mt-2">
+        <h2 className="size-label myGray">Choose a Size:</h2>
+        <div className="size-options flex flex-wrap">
+          {availableColorsWithSizes
+            .find(c => c.title === selectedColor)
+            .sizes?.filter(s => s.qty > 0)
+            .map((s, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  setSelectedSize(s.size);
+                  setDisplayedPrice(s.price);
+                }}
+                className={`px-3 py-1 m-1  rounded ${selectedSize === s.size ? 'myboo22' : 'myboo2'}`}
+              >
+                {s.size}
+              </button>
+            ))}
+        </div>
+      </div>
+    )}
 
-                          {availableColorsWithoutSizes?.length > 0 && (
-                            <div className="mt-4">
-                              <h2 className="color-label myGray">Other Colors:</h2>
-                              <div className="color-options">
-                                {availableColorsWithoutSizes?.map((c, index) => (
-                                  <div
-                                    key={index}
-                                    onClick={() => {
-                                      setSelectedColor(c.color);
-                                      setSelectedSize(null);
-                                      setDisplayedPrice(c.price ?? null);
-                                    }}
-                                    className={`color-circle ${selectedColor === c.color ? "selected" : ""
-                                      }`}
-                                    style={{ backgroundColor: c.color }}
-                                    title={`${c.color}`}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
+ 
+  </div>
+)}
+
 {/* --- price logic --- */}
 {hasSizes ? (
   selectedSize ? (
